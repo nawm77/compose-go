@@ -3,8 +3,13 @@ services:
     image: redis
     ports:
       - 6379:6379
+    entrypoint: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     labels:
       - com.packtpub.compose.app=task-manager
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
+      - backup:/backup
   gorest:
     build:
       context: .
@@ -23,15 +28,22 @@ services:
       start_period: 5s
     depends_on:
       - redis
-  redis-populate:
-    image: redis
-    entrypoint: [ "/redis-populate.sh","/redis-populate.txt" ]
+  redis-backup:
+    image: bash
+    entrypoint: ["bash","snapshot-backup.sh"]
     depends_on:
       - redis
-    env_file:
-      - ./env.redis-populate
+    environment:
+      - BACKUP_PERIOD=10
     volumes:
-      - ./redis-populate.txt:/redis-populate.txt
-      - ./redis-populate.sh:/redis-populate.sh
+      - ./snapshot-backup.sh:/snapshot-backup.sh
+      - redis-data:/data:ro
+      - backup:/backup
+
+volumes:
+  redis-data:
+    labels:
+      - com.packtpub.compose.app=task-manager
+  backup:
     labels:
       - com.packtpub.compose.app=task-manager

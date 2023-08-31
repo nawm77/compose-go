@@ -1,0 +1,7 @@
+services:
+  nginx:
+    image: nginx
+volumes:
+  example-compose-volume:
+    labels:
+      - com.packtpub.compose.app=volume-example
